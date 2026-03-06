@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FaceSearch - Login</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-box {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 40px;
+            width: 400px;
+            max-width: 90%;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 32px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 30px;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 16px;
+        }
+
+        input::placeholder {
+            color: rgba(255,255,255,0.4);
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px rgba(0,210,255,0.3);
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .tab.active {
+            border-bottom-color: #00d2ff;
+            color: #00d2ff;
+        }
+
+        .hidden { display: none; }
+
+        .error {
+            color: #ff6b6b;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .success {
+            color: #00d2ff;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h1>🔍 FaceSearch</h1>
+        <p class="subtitle">Client Portal</p>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('login')">Login</div>
+            <div class="tab" onclick="switchTab('register')">Register</div>
+        </div>
+
+        <!-- Login Form -->
+        <div id="loginForm">
+            <p class="error" id="loginError"></p>
+            <input type="email" id="loginEmail" placeholder="Email">
+            <input type="password" id="loginPassword" placeholder="Password">
+            <button onclick="login()">Login</button>
+        </div>
+
+        <!-- Register Form -->
+        <div id="registerForm" class="hidden">
+            <p class="success" id="registerSuccess"></p>
+            <p class="error" id="registerError"></p>
+            <input type="text" id="registerName" placeholder="Full Name">
+            <input type="email" id="registerEmail" placeholder="Email">
+            <input type="password" id="registerPassword" placeholder="Password">
+            <button onclick="register()">Register</button>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (tab === 'login') {
+                document.getElementById('loginForm').classList.remove('hidden');
+                document.getElementById('registerForm').classList.add('hidden');
+            } else {
+                document.getElementById('loginForm').classList.add('hidden');
+                document.getElementById('registerForm').classList.remove('hidden');
+            }
+        }
+
+        function register() {
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            
+            if (!name || !email || !password) {
+                document.getElementById('registerError').textContent = 'Please fill all fields';
+                return;
+            }
+
+            const users = JSON.parse(localStorage.getItem('facesearch_users') || '{}');
+            if (users[email]) {
+                document.getElementById('registerError').textContent = 'Email already registered';
+                return;
+            }
+
+            users[email] = {
+                name,
+                password,
+                balance: 0,
+                memberUntil: null,
+                createdAt: new Date().toISOString()
+            };
+            localStorage.setItem('facesearch_users', JSON.stringify(users));
+            
+            document.getElementById('registerSuccess').textContent = 'Registration successful! Please login.';
+            document.getElementById('registerError').textContent = '';
+            
+            setTimeout(() => switchTab('login'), 1500);
+        }
+
+        function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            const users = JSON.parse(localStorage.getItem('facesearch_users') || '{}');
+            const user = users[email];
+            
+            if (!user || user.password !== password) {
+                document.getElementById('loginError').textContent = 'Invalid email or password';
+                return;
+            }
+
+            localStorage.setItem('facesearch_current', email);
+            window.location.href = 'facesearch_dashboard.html';
+        }
+    </script>
+</body>
+</html>

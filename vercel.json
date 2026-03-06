@@ -1,0 +1,49 @@
+{
+  "builds": [
+    {
+      "src": "api.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "index.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "facesearch_login.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "facesearch_dashboard.html", 
+      "use": "@vercel/static"
+    },
+    {
+      "src": "facesearch_admin.html",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api.py"
+    },
+    {
+      "src": "/facesearch_login.html",
+      "dest": "/facesearch_login.html"
+    },
+    {
+      "src": "/facesearch_dashboard.html",
+      "dest": "/facesearch_dashboard.html"
+    },
+    {
+      "src": "/facesearch_admin.html",
+      "dest": "/facesearch_admin.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "env": {
+    "PYTHON_VERSION": "3.9"
+  }
+}
