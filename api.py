@@ -9,6 +9,39 @@ CORS(app)
 
 GOOGLE_API_KEY = "AIzaSyCaLFY_FM7iwdhAC2Vi8I-_9yGXBh3CYVc"
 
+# ---------------------------------------------------------------------------
+# Performance & Security Middleware (auto-fix: cache + security headers)
+# ---------------------------------------------------------------------------
+
+@app.after_request
+def add_security_and_cache_headers(response):
+    """Add security headers and Cache-Control to all responses."""
+    # Security headers
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    # Cache-Control headers
+    if request.method == "GET" and response.status_code == 200:
+        path = request.path
+        if path.endswith('.html'):
+            response.headers["Cache-Control"] = "public, max-age=3600"
+        elif path.endswith(('.css', '.js', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.woff', '.woff2')):
+            response.headers["Cache-Control"] = "public, max-age=86400"
+        elif path.startswith('/api/'):
+            response.headers["Cache-Control"] = "no-cache"
+        else:
+            response.headers["Cache-Control"] = "public, max-age=300"
+    return response
+
+
+@app.errorhandler(404)
+def not_found(e):
+    """Return compact JSON 404 instead of HTML to reduce bandwidth."""
+    return jsonify({"error": "Not Found", "path": request.path}), 404
+
+
 def detect_face_and_search(image_base64):
     try:
         url = "https://vision.googleapis.com/v1/images:annotate"
