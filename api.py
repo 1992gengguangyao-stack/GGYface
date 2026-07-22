@@ -1,10 +1,12 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
+from werkzeug.middleware.gzip import GzipMiddleware
 import base64
 import requests
 import os
 
 app = Flask(__name__, static_folder='.')
+app.wsgi_app = GzipMiddleware(app.wsgi_app)
 CORS(app)
 
 GOOGLE_API_KEY = "AIzaSyCaLFY_FM7iwdhAC2Vi8I-_9yGXBh3CYVc"
@@ -22,17 +24,19 @@ def add_security_and_cache_headers(response):
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    # Cache-Control headers
+    # Cache-Control headers (s-maxage for Cloudflare CDN, stale-while-revalidate for hit rate)
+    path = request.path
     if request.method == "GET" and response.status_code == 200:
-        path = request.path
         if path.endswith('.html'):
-            response.headers["Cache-Control"] = "public, max-age=3600"
+            response.headers["Cache-Control"] = "public, max-age=3600, s-maxage=86400, stale-while-revalidate=600"
         elif path.endswith(('.css', '.js', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.woff', '.woff2')):
-            response.headers["Cache-Control"] = "public, max-age=86400"
+            response.headers["Cache-Control"] = "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=86400"
         elif path.startswith('/api/'):
             response.headers["Cache-Control"] = "no-cache"
         else:
-            response.headers["Cache-Control"] = "public, max-age=300"
+            response.headers["Cache-Control"] = "public, max-age=300, s-maxage=3600, stale-while-revalidate=300"
+    elif response.status_code == 404:
+        response.headers["Cache-Control"] = "public, max-age=60, s-maxage=300"
     return response
 
 
